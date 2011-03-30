@@ -27,6 +27,9 @@ namespace SharpNotes
 
         public void Load(string path)
         {
+            if (channel != null)
+                ERRCHECK(channel.setCallback(null));
+
             if (sound != null)
                 ERRCHECK(sound.release());
 
@@ -38,7 +41,8 @@ namespace SharpNotes
 
         public void Shutdown()
         {
-            ERRCHECK( channel.setCallback(null) );
+            if( channel != null )
+                ERRCHECK( channel.setCallback(null) );
 
             if (sound != null)
                 ERRCHECK( sound.release() );

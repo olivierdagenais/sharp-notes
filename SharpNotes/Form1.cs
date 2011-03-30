@@ -21,6 +21,7 @@ namespace SharpNotes
         Library library;
         const string libraryFile = "SharpNotes.xml";
         IEnumerable<Tune> visible;
+        List<Tune> playQueue = new List<Tune>();
         Tune playing;
 
         #endregion
@@ -104,7 +105,7 @@ namespace SharpNotes
         {
             var index = 0;
 
-            var selectedIndexes = list.SelectedIndices;
+            var selectedIndexes = playlist.SelectedIndices;
             if (selectedIndexes.Count > 0)
                 index = selectedIndexes[0];
 
@@ -113,8 +114,8 @@ namespace SharpNotes
 
         void Play(int index)
         {
-            index %= visible.Count();
-            Tune tune = visible.ElementAt(index);
+            index %= playQueue.Count();
+            Tune tune = playQueue[index];
 
             if (tune != null && tune != playing)
             {
@@ -123,8 +124,8 @@ namespace SharpNotes
                 playing = tune;
             }
 
-            list.SelectedIndices.Clear();
-            list.SelectedIndices.Add(index);
+            playlist.SelectedIndices.Clear();
+            playlist.SelectedIndices.Add(index);
 
             player.PlayOrPause();
             RefreshStatus();
@@ -132,7 +133,7 @@ namespace SharpNotes
 
         void PlayNext()
         {
-            var current = visible.ToList().IndexOf(playing);
+            var current = playQueue.IndexOf(playing);
             if (current < 0) current = 0;
             Play(current + 1);
         }
@@ -142,7 +143,26 @@ namespace SharpNotes
             Play();
         }
 
-        private void list_ItemActivate(object sender, EventArgs e)
+        void AddSelectionToPlaylist()
+        {
+            var l = visible.ToList();
+            for(var i=0; i<libraryList.SelectedIndices.Count; i++)
+            {
+                var index = libraryList.SelectedIndices[i];
+                var tune = visible.ElementAt(index);
+                if (!playQueue.Contains(tune))
+                    playQueue.Add(tune);
+            }
+
+            UpdatePlaylist();
+        }
+
+        private void library_ItemActivate(object sender, EventArgs e)
+        {
+            AddSelectionToPlaylist();
+        }
+
+        private void playlist_ItemActivate(object sender, EventArgs e)
         {
             Play();
         }
@@ -162,11 +182,19 @@ namespace SharpNotes
 
         void UpdateListColumnWidths()
         {
-            for (var i = 0; i < list.Columns.Count; i++)
+            foreach (var list in new[] { libraryList, playlist })
             {
-                var column = list.Columns[i];
-                column.Width = (int)Math.Floor(1.0 * (list.Width - list.Margin.Horizontal) / list.Columns.Count);
+                for (var i = 0; i < list.Columns.Count; i++)
+                {
+                    var column = list.Columns[i];
+                    column.Width = (int)Math.Floor(1.0 * (list.Width - list.Margin.Horizontal) / list.Columns.Count);
+                }
             }
+            //for (var i = 0; i < libraryList.Columns.Count; i++)
+            //{
+            //    var column = libraryList.Columns[i];
+            //    column.Width = (int)Math.Floor(1.0 * (libraryList.Width - libraryList.Margin.Horizontal) / libraryList.Columns.Count);
+            //}
         }
 
         private void filter_TextChanged(object sender, EventArgs e)
@@ -177,12 +205,25 @@ namespace SharpNotes
         void UpdateList()
         {
             visible = library.Filter(filter.Text);
-            list.Items.Clear();
+            libraryList.Items.Clear();
             foreach (var tune in visible)
             {
                 var columns = new[] { tune.Artist, tune.Album, tune.Name };
                 var item = new ListViewItem(columns);
-                list.Items.Add(item);
+                libraryList.Items.Add(item);
+            }
+
+            UpdateListColumnWidths();
+        }
+
+        void UpdatePlaylist()
+        {
+            playlist.Items.Clear();
+            foreach (var tune in playQueue)
+            {
+                var columns = new[] { tune.Artist, tune.Album, tune.Name };
+                var item = new ListViewItem(columns);
+                playlist.Items.Add(item);
             }
 
             UpdateListColumnWidths();
