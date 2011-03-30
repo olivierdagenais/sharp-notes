@@ -75,6 +75,8 @@ namespace SharpNotes
                 var sb = new StringBuilder();
                 if (!player.IsPlaying) sb.Append("(");
                 sb.AppendFormat("{0:mm\\:ss}", player.Position);
+                if (playing != null)
+                    sb.AppendFormat(" / {0:mm\\:ss}", playing.Duration);
                 if (!player.IsPlaying) sb.Append(")");
                 time.Text = sb.ToString();
             }
