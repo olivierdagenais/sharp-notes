@@ -62,14 +62,15 @@
             this.album,
             this.song});
             this.libraryList.FullRowSelect = true;
-            this.libraryList.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
             this.libraryList.HideSelection = false;
             this.libraryList.Location = new System.Drawing.Point(6, 47);
             this.libraryList.Name = "libraryList";
             this.libraryList.Size = new System.Drawing.Size(402, 490);
+            this.libraryList.Sorting = System.Windows.Forms.SortOrder.Ascending;
             this.libraryList.TabIndex = 5;
             this.libraryList.UseCompatibleStateImageBehavior = false;
             this.libraryList.View = System.Windows.Forms.View.Details;
+            this.libraryList.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.libraryList_ColumnClick);
             this.libraryList.ItemActivate += new System.EventHandler(this.library_ItemActivate);
             this.libraryList.DragDrop += new System.Windows.Forms.DragEventHandler(this.list_DragDrop);
             this.libraryList.DragEnter += new System.Windows.Forms.DragEventHandler(this.list_DragEnter);

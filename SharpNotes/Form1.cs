@@ -33,7 +33,7 @@ namespace SharpNotes
             InitializeComponent();
             player = new Player( PlayNext );
             library = Library.Load(libraryFile);
-            UpdateList();
+            UpdateLibrary();
 
             new InterceptKeys(HandleGlobalKey);
             RefreshStatus();
@@ -95,7 +95,7 @@ namespace SharpNotes
         {
             var files = (string[])e.Data.GetData("FileNameW");
             library.Import(files);
-            UpdateList();
+            UpdateLibrary();
             library.Save();
         }
 
@@ -192,19 +192,14 @@ namespace SharpNotes
                     column.Width = (int)Math.Floor(1.0 * (list.Width - list.Margin.Horizontal) / list.Columns.Count);
                 }
             }
-            //for (var i = 0; i < libraryList.Columns.Count; i++)
-            //{
-            //    var column = libraryList.Columns[i];
-            //    column.Width = (int)Math.Floor(1.0 * (libraryList.Width - libraryList.Margin.Horizontal) / libraryList.Columns.Count);
-            //}
         }
 
         private void filter_TextChanged(object sender, EventArgs e)
         {
-            UpdateList();
+            UpdateLibrary();
         }
 
-        void UpdateList()
+        void UpdateLibrary()
         {
             visible = library.Filter(filter.Text);
             libraryList.Items.Clear();
@@ -252,5 +247,49 @@ namespace SharpNotes
 
         #endregion
 
+        #region Batch Updates
+
+        IEnumerable<Tune> SelectedLibraryTunes
+        {
+            get
+            {
+                for (var i = 0; i < libraryList.SelectedIndices.Count; i++)
+                {
+                    var index = libraryList.SelectedIndices[i];
+                    var tune = visible.ElementAt(index);
+                    yield return tune;
+                }
+            }
+        }
+
+        private void libraryList_ColumnClick(object sender, ColumnClickEventArgs e)
+        {
+            var fieldName = new[] { "Artist", "Album", "Song" }[e.Column];
+            var valueDialog = new BatchEditDialog(fieldName);
+            valueDialog.ShowDialog(this);
+            if (valueDialog.Accepted)
+            {
+                var value = valueDialog.Value;
+                switch (e.Column)
+                {
+                    case 0:
+                        SelectedLibraryTunes.ToList().ForEach(t => t.Artist = value);
+                        break;
+                    case 1:
+                        SelectedLibraryTunes.ToList().ForEach(t => t.Album = value);
+                        break;
+                    case 2:
+                        SelectedLibraryTunes.ToList().ForEach(t => t.Name = value);
+                        break;
+                    default:
+                        throw new Exception("What column is this?!");
+                }
+            }
+
+            UpdateLibrary();
+            library.Save();
+        }
+
+        #endregion
     }
 }
